@@ -1,5 +1,4 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2
 LDFLAGS = -lraylib -lm -ldl -lrt -lpthread -lX11
 
 SRC = main.c 2048.c
@@ -14,7 +13,7 @@ $(TARGET): $(OBJ)
 	$(CC) $(OBJ) -o $@ $(LDFLAGS)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $< -o $@
 
 clean:
 	rm -f $(OBJ) $(TARGET)
