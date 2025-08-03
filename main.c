@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <raylib.h>
+#include <stdlib.h>
 #include "2048.h"
 
 #define CELL_SIZE 80
-#define CELL_BLOCK_PERC 88
-#define FONT_SIZE 50
+#define CELL_BLOCK_PERC 90
+#define ROUNDED_CORNERS 0.2f
 
 enum GameState {
   INPUT,
@@ -18,14 +19,21 @@ static const float BLOCK_SIZE = (CELL_BLOCK_PERC * CELL_SIZE) / 100;
 static const float PADDING = ((CELL_SIZE - BLOCK_SIZE) * SIZE) / (SIZE + 1);
 static const float ANIM_SPEED = W_SIZE * 4;
 
-static enum GameState gamestate = INPUT;
-static enum Direction dir = LEFT;
-static bool is_animating = false;
-static bool new_block = false;
+static const Color BG_COL = {187, 173, 160, 255};
+static const Color EMPTY_TILE_COL = {204, 192, 180, 255};
 
-static Color get_tile_color(int value) {
-  switch (value) {
-    case 0: return (Color){238, 238, 238, 255};
+static const char *TITLE = "2048";
+
+static const char *FONT = "font.ttf";
+static Font game_font;
+
+static enum GameState gamestate = INPUT;
+static enum Direction dir;
+static bool is_animating;
+static bool new_block;
+
+static inline Color get_tile_color(int num) {
+  switch (num) {
     case 2: return (Color){238, 228, 218, 255};
     case 4: return (Color){237, 224, 200, 255};
     case 8: return (Color){242, 177, 121, 255};
@@ -37,24 +45,46 @@ static Color get_tile_color(int value) {
     case 512: return (Color){237, 200, 80, 255};
     case 1024: return (Color){237, 197, 63, 255};
     case 2048: return (Color){237, 194, 46, 255};
-    default: return (Color){60, 58, 50, 255}; // For >2048
+    default: return (Color){60, 58, 50, 255};
   }
 }
 
-static bool takeinput(void) {
-  int new_dir = -1;
+static inline Color get_text_color(int num) {
+  return (num <= 4)? (Color){119, 110, 101, 255} : RAYWHITE;
+}
 
-  if (IsKeyPressed(KEY_LEFT))  new_dir = LEFT;
-  else if (IsKeyPressed(KEY_RIGHT)) new_dir = RIGHT;
-  else if (IsKeyPressed(KEY_UP))    new_dir = UP;
-  else if (IsKeyPressed(KEY_DOWN))  new_dir = DOWN;
+static enum GameState get_input(void) {
 
-  if (new_dir != -1) {
-    dir = new_dir;
-    return true;
+  if (IsKeyPressed(KEY_LEFT)) {
+    dir = LEFT;
+    return MERGE;
+    
+  } else if (IsKeyPressed(KEY_RIGHT)) {
+    dir = RIGHT;
+    return MERGE;
+    
+  } else if (IsKeyPressed(KEY_UP)) {
+    dir = UP;
+    return MERGE;
+    
+  } else if (IsKeyPressed(KEY_DOWN)) {
+    dir = DOWN;
+    return MERGE;
+    
   }
 
-  return false;
+  return INPUT;
+}
+
+static void draw_empty_tiles(void) {
+  for (int i = 0; i < SIZE; i++) {
+    for (int j = 0; j < SIZE; j++) {
+      float x = j * BLOCK_SIZE + PADDING * (j + 1);
+      float y = i * BLOCK_SIZE + PADDING * (i + 1);
+      Rectangle rect = {x, y, BLOCK_SIZE, BLOCK_SIZE};
+      DrawRectangleRounded(rect, ROUNDED_CORNERS, 12, EMPTY_TILE_COL);
+    }
+  }
 }
 
 static void animate(struct Block *b, float target_x, float target_y, float dt) {
@@ -76,15 +106,24 @@ static void animate(struct Block *b, float target_x, float target_y, float dt) {
 }
 
 static void rendernum(int num, float x, float y) {
-  const char* num_str = TextFormat("%d", num);
-  int text_height = FONT_SIZE;
-  int digits = (num < 10) ? 1 : (num < 100) ? 2 : (num < 1000) ? 3 : 4;
-  int font_size = 50 - (digits - 1) * 5;
-  int text_width = MeasureText(num_str, font_size);
-  int text_x = x + (BLOCK_SIZE - text_width) / 2;
-  int text_y = y + (BLOCK_SIZE - text_height) / 2;
-  Color text_color = (num <= 4) ? (Color){119, 110, 101, 255} : RAYWHITE;
-  DrawText(num_str, text_x, text_y, font_size, text_color);
+  const char *num_str = TextFormat("%d", num);
+
+  int digits = (num < 10) ? 1 :
+               (num < 100) ? 2 :
+               (num < 1000) ? 3 :
+               (num < 10000) ? 4 : 5;
+
+  float base_font_size = BLOCK_SIZE / 2.2f;
+  float font_size = base_font_size - (digits - 2) * (BLOCK_SIZE * 0.08f);
+
+  Vector2 text_size = MeasureTextEx(game_font, num_str, font_size, 0);
+  Vector2 pos = {
+      x + (BLOCK_SIZE - text_size.x) / 2.0f,
+      y + (BLOCK_SIZE - text_size.y) / 2.0f
+  };
+
+  Color text_color = get_text_color(num);
+  DrawTextEx(game_font, num_str, pos, font_size, 0, text_color);
 }
 
 static void draw_tiles(float dt) {
@@ -114,71 +153,70 @@ static void draw_tiles(float dt) {
         is_animating = true;
       }
 
-      DrawRectangleRounded((Rectangle){b->x, b->y, BLOCK_SIZE, BLOCK_SIZE}, 0.2f, 12, get_tile_color(b->num));
+      Rectangle rect = {b->x, b->y, BLOCK_SIZE, BLOCK_SIZE};
+
+      DrawRectangleRounded(rect, ROUNDED_CORNERS, 12, get_tile_color(b->num));
       rendernum(b->num, b->x, b->y);
     }
   }
 
 }
 
-static void draw_empty_tiles(void) {
-  for (int i = 0; i < SIZE; i++) {
-    for (int j = 0; j < SIZE; j++) {
-      float x = j * BLOCK_SIZE + PADDING * (j + 1);
-      float y = i * BLOCK_SIZE + PADDING * (i + 1);
-      DrawRectangleRounded((Rectangle){x, y, BLOCK_SIZE, BLOCK_SIZE}, 0.2f, 12, get_tile_color(0));
+static void manage_gamestate(void) {
+ 
+  if (gamestate == INPUT) {
+    gamestate = get_input();
+
+  } else if (gamestate == MERGE) {
+    new_block = merge(dir);
+    gamestate = ANIMATION;
+
+  } else if (gamestate == ANIMATION) {
+    if (!is_animating) {
+      gamestate = INPUT;
+      if (new_block) {
+        random2();
+      } else if (isover()) {
+        gamestate = OVER;
+      }
     }
   }
+
 }
  
 static void render(float dt) {
+  BeginDrawing();
+  ClearBackground(BG_COL);
   draw_empty_tiles();
   draw_tiles(dt);
+  EndDrawing();
+}
+
+static void init_renderer(void) {
+  InitWindow(W_SIZE, W_SIZE, TITLE);
+  game_font = LoadFontEx(FONT, 64, NULL, 0);
+  if (!IsFontValid(game_font)) {
+    fprintf(stderr, "Error: Font \'%s\' not found / corrupted!\n", FONT);
+    exit(0);
+  }
+}
+
+static void gameloop(void) {
+  while (!WindowShouldClose()) {
+    float dt = GetFrameTime(); 
+    manage_gamestate();
+    render(dt);
+  }
+}
+
+static void end_renderer(void) {
+  CloseWindow();
 }
 
 int main(void) {
-  InitWindow(W_SIZE, W_SIZE, "2048");
-
+  init_renderer();
   init_2048();
-
-  while (!WindowShouldClose()) {
-    float dt = GetFrameTime(); 
-
-    if (gamestate == INPUT) {
-      if (takeinput()) {
-        gamestate = MERGE;
-      }
-
-    } else if (gamestate == MERGE) {
-      new_block = merge(dir);
-      gamestate = ANIMATION;
-
-    } else if (gamestate == ANIMATION) {
-      if (!is_animating) {
-        gamestate = INPUT;
-        if (new_block) {
-          random2();
-        } else if (isover()) {
-          gamestate = OVER;
-        }
-      }
-
-    } else {
-      printf("GAME OVER\n");
-      WaitTime(2);
-      return 0;
-
-    }
-    
-    BeginDrawing();
-
-    ClearBackground(RAYWHITE);
-
-    render(dt);
-
-    EndDrawing();
-  }
-
-  CloseWindow();
+  gameloop();
+  end_renderer();
   return 0;
 }

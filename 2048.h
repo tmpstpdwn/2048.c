@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#define SIZE 3
+#define SIZE 1
 
 struct Block {
   int num;
