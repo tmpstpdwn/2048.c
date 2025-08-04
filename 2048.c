@@ -81,12 +81,20 @@ static void rmerge(struct Block *arr[SIZE], int dir) {
     }
       
     if (arr[write]->num == arr[read]->num) {
+      arr[write]->merged_num = arr[write]->num;
+      arr[write]->merged_x = arr[write]->x;
+      arr[write]->merged_y = arr[write]->y;
+      arr[write]->merged = true;
+      arr[write]->merged_alpha = 1;
+
       arr[write]->num *= 2;
       arr[write]->x = arr[read]->x;
       arr[write]->y = arr[read]->y;
       arr[write]->init = arr[read]->init;
-      arr[read]->init = 0;
+      
+      arr[read]->init = false;
       arr[read]->num = 0;
+
       write += step, read += step;
       new_block = true;
 
@@ -95,8 +103,10 @@ static void rmerge(struct Block *arr[SIZE], int dir) {
       arr[write]->x = arr[read]->x;
       arr[write]->y = arr[read]->y;
       arr[write]->init = arr[read]->init;
-      arr[read]->init = 0;
+
+      arr[read]->init = false;
       arr[read]->num = 0;
+
       read += step;
       new_block = true;
 

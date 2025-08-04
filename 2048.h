@@ -3,13 +3,19 @@
 
 #include <stdbool.h>
 
-#define SIZE 1
+#define SIZE 6
 
 struct Block {
   int num;
   float x;
   float y;
-  int init;
+  bool init;
+  float alpha;
+  bool merged;
+  int merged_num;
+  float merged_x;
+  float merged_y;
+  float merged_alpha;
 };
 
 enum Direction {

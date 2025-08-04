@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "2048.h"
 
-#define CELL_SIZE 80
+#define CELL_SIZE 100
 #define CELL_BLOCK_PERC 90
 #define ROUNDED_CORNERS 0.2f
 
@@ -17,7 +17,9 @@ enum GameState {
 static const int W_SIZE = SIZE * CELL_SIZE; 
 static const float BLOCK_SIZE = (CELL_BLOCK_PERC * CELL_SIZE) / 100;
 static const float PADDING = ((CELL_SIZE - BLOCK_SIZE) * SIZE) / (SIZE + 1);
-static const float ANIM_SPEED = W_SIZE * 4;
+static const float SLIDE_SPEED = W_SIZE * 4;
+static const float FADE_IN_SPEED = 2;
+static const float FADE_OUT_SPEED = 2;
 
 static const Color BG_COL = {187, 173, 160, 255};
 static const Color EMPTY_TILE_COL = {204, 192, 180, 255};
@@ -87,20 +89,20 @@ static void draw_empty_tiles(void) {
   }
 }
 
-static void animate(struct Block *b, float target_x, float target_y, float dt) {
+static void slide(struct Block *b, float target_x, float target_y, float dt) {
   if (b->x < target_x) {
-    b->x += ANIM_SPEED * dt;
+    b->x += SLIDE_SPEED * dt;
     if (b->x > target_x) b->x = target_x;
   } else if (b->x > target_x) {
-    b->x -= ANIM_SPEED * dt;
+    b->x -= SLIDE_SPEED * dt;
     if (b->x < target_x) b->x = target_x;
   }
 
   if (b->y < target_y) {
-    b->y += ANIM_SPEED * dt;
+    b->y += SLIDE_SPEED * dt;
     if (b->y > target_y) b->y = target_y;
   } else if (b->y > target_y) {
-    b->y -= ANIM_SPEED * dt;
+    b->y -= SLIDE_SPEED * dt;
     if (b->y < target_y) b->y = target_y;
   }
 }
@@ -141,13 +143,38 @@ static void draw_tiles(float dt) {
       if (!b->init) {
         b->x = j * BLOCK_SIZE + PADDING * (j + 1);
         b->y = i * BLOCK_SIZE + PADDING * (i + 1);
-        b->init = 1;
+        b->init = true;
+        b->alpha = 0;
+      }
+
+      Color block_color = get_tile_color(b->num);
+
+      // Fade in.
+      if (b->alpha != 1) {
+        b->alpha += FADE_IN_SPEED * dt;
+        if (b->alpha >= 1) {
+          b->alpha = 1;
+        }
+        block_color.a *= b->alpha;
+      }
+
+      // Fade out
+      if (b->merged) {
+        b->merged_alpha -= FADE_OUT_SPEED * dt;
+        if (b->merged_alpha <= 0) {
+          b->merged = false;
+          b->merged_alpha = 0;
+        }
+        Color merged_color = get_tile_color(b->merged_num);
+        merged_color.a *= b->merged_alpha;
+        Rectangle rect = {b->merged_x, b->merged_y, BLOCK_SIZE, BLOCK_SIZE};
+        DrawRectangleRounded(rect, ROUNDED_CORNERS, 20, merged_color);
       }
 
       float target_x = j * BLOCK_SIZE + PADDING * (j + 1);
       float target_y = i * BLOCK_SIZE + PADDING * (i + 1);
 
-      animate(b, target_x, target_y, dt);
+      slide(b, target_x, target_y, dt);
 
       if (b->x != target_x || b->y != target_y) {
         is_animating = true;
@@ -155,7 +182,7 @@ static void draw_tiles(float dt) {
 
       Rectangle rect = {b->x, b->y, BLOCK_SIZE, BLOCK_SIZE};
 
-      DrawRectangleRounded(rect, ROUNDED_CORNERS, 12, get_tile_color(b->num));
+      DrawRectangleRounded(rect, ROUNDED_CORNERS, 20, block_color);
       rendernum(b->num, b->x, b->y);
     }
   }
