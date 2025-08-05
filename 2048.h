@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#define SIZE 6
+#define SIZE 4
 
 struct Block {
   int num;
@@ -26,10 +26,9 @@ enum Direction {
 };
 
 bool isover(void); // Is the game over?
-void random2(void); // Spawn 2/4 randomly on the board?
-void init_2048(void); // Initializes the game board
-bool merge(enum Direction dir); // Merges vertically (left, right, up, down)
+void random24(void); // Spawns 2 or 4 randomly on the board.
+void init_2048(void); // Initializes the game board.
+bool merge(enum Direction dir); // Merges vertically (left, right, up, down).
 struct Block* getblock(int row, int col); // Return pointer to a block.
-void print_2048(void); // Print the table
 
 #endif

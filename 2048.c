@@ -11,8 +11,8 @@
 static struct Block table[SIZE][SIZE] = {0};
 
 // Row pointer arrays.
-static struct Block *rowh[SIZE][SIZE] = {0};
-static struct Block *rowv[SIZE][SIZE] = {0};
+static struct Block *rowh[SIZE][SIZE] = {0}; // Horizontal.
+static struct Block *rowv[SIZE][SIZE] = {0}; // Vertical.
 
 // Should a new block be added?
 static bool new_block = false;
@@ -31,9 +31,8 @@ bool isover(void) {
   return true;
 }
 
-// Set non-zero table pos to 2.
-// return false if table is full.
-void random2(void) {
+// Set random non-zero table cell to 2 or 4.
+void random24(void) {
   int empty_cells[SIZE * SIZE][2];
   int count = 0;
 
@@ -47,13 +46,15 @@ void random2(void) {
     }
   }
 
+  if (count == 0) return;
+
   int rand_index = rand() % count;
   int x = empty_cells[rand_index][0];
   int y = empty_cells[rand_index][1];
   table[x][y].num = (rand() % 10 == 0) ? 4 : 2;
 }
 
-// Initialize table and row pointers.
+// Initialize random seed, row pointers.
 void init_2048(void) {
   srand(time(NULL));
 
@@ -64,10 +65,11 @@ void init_2048(void) {
     }
   }
 
-  random2();
-  random2();
+  random24();
+  random24();
 }
 
+// Merge a row in the given direction (1: right, -1: left).
 static void rmerge(struct Block *arr[SIZE], int dir) {
   int step = (dir == 1) ? -1 : 1;
   int write = (dir == 1) ? SIZE - 1 : 0;
@@ -118,22 +120,22 @@ static void rmerge(struct Block *arr[SIZE], int dir) {
 
     }
   }
-
 }
 
-// Merge all vertical rows.
+// Merge all vertical rows in the given direction (1: right, -1: left).
 static void vmerge(int dir) {
   for (int i = 0; i < SIZE; ++i)
     rmerge(rowv[i], dir);
 }
 
-// Merge all horizontal rows.
+// Merge all horizontal rows in the given direction (1: right, -1: left).
 static void hmerge(int dir) {
   for (int i = 0; i < SIZE; ++i)
     rmerge(rowh[i], dir);
 }
 
-// Merge whole table based on dir.
+// Merge the whole table based on dir (LEFT, RIGHT, UP, DOWN).
+// Returns whether a new block should be added or not.
 bool merge(enum Direction dir) {
   new_block = false;
   switch (dir) {

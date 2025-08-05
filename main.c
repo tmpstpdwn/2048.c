@@ -6,6 +6,8 @@
 #define CELL_SIZE 100
 #define CELL_BLOCK_PERC 90
 #define ROUNDED_CORNERS 0.2f
+#define FPS 60
+#define FADE_SPEED 2.0f
 
 enum GameState {
   INPUT,
@@ -18,8 +20,6 @@ static const int W_SIZE = SIZE * CELL_SIZE;
 static const float BLOCK_SIZE = (CELL_BLOCK_PERC * CELL_SIZE) / 100;
 static const float PADDING = ((CELL_SIZE - BLOCK_SIZE) * SIZE) / (SIZE + 1);
 static const float SLIDE_SPEED = W_SIZE * 4;
-static const float FADE_IN_SPEED = 2;
-static const float FADE_OUT_SPEED = 2;
 
 static const Color BG_COL = {187, 173, 160, 255};
 static const Color EMPTY_TILE_COL = {204, 192, 180, 255};
@@ -151,7 +151,7 @@ static void draw_tiles(float dt) {
 
       // Fade in.
       if (b->alpha != 1) {
-        b->alpha += FADE_IN_SPEED * dt;
+        b->alpha += FADE_SPEED * dt;
         if (b->alpha >= 1) {
           b->alpha = 1;
         }
@@ -160,7 +160,7 @@ static void draw_tiles(float dt) {
 
       // Fade out
       if (b->merged) {
-        b->merged_alpha -= FADE_OUT_SPEED * dt;
+        b->merged_alpha -= FADE_SPEED * dt;
         if (b->merged_alpha <= 0) {
           b->merged = false;
           b->merged_alpha = 0;
@@ -202,7 +202,7 @@ static void manage_gamestate(void) {
     if (!is_animating) {
       gamestate = INPUT;
       if (new_block) {
-        random2();
+        random24();
       } else if (isover()) {
         gamestate = OVER;
       }
@@ -226,6 +226,7 @@ static void init_renderer(void) {
     fprintf(stderr, "Error: Font \'%s\' not found / corrupted!\n", FONT);
     exit(0);
   }
+  SetTargetFPS(FPS);
 }
 
 static void gameloop(void) {
