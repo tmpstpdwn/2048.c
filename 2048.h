@@ -25,7 +25,7 @@ enum Direction {
   DOWN
 };
 
-bool isover(void); // Is the game over?
+void reset_2048(void); // Reset the game board.
 void random24(void); // Spawns 2 or 4 randomly on the board.
 void init_2048(void); // Initializes the game board.
 bool merge(enum Direction dir); // Merges vertically (left, right, up, down).

@@ -1,3 +1,5 @@
+/* [[ INCLUDES, DEFINES AND ENUMS ]] */
+
 #include <stdio.h>
 #include <raylib.h>
 #include <stdlib.h>
@@ -5,7 +7,7 @@
 
 #define CELL_SIZE 100
 #define CELL_BLOCK_PERC 90
-#define ROUNDED_CORNERS 0.2f
+#define ROUNDED_CORNERS 0.1f
 #define FPS 60
 #define FADE_SPEED 2.0f
 
@@ -13,27 +15,37 @@ enum GameState {
   INPUT,
   MERGE,
   ANIMATION,
-  OVER,
+  RESET,
 };
 
+/* [[ GLOBAL VARS ]] */
+
+// UI stuff.
 static const int W_SIZE = SIZE * CELL_SIZE; 
 static const float BLOCK_SIZE = (CELL_BLOCK_PERC * CELL_SIZE) / 100;
 static const float PADDING = ((CELL_SIZE - BLOCK_SIZE) * SIZE) / (SIZE + 1);
 static const float SLIDE_SPEED = W_SIZE * 4;
 
+// Repeatedly used colors for BG and empty tiles.
 static const Color BG_COL = {187, 173, 160, 255};
 static const Color EMPTY_TILE_COL = {204, 192, 180, 255};
 
+// Title.
 static const char *TITLE = "2048";
 
+// Font.
 static const char *FONT = "font.ttf";
 static Font game_font;
 
+// Game contextual variables.
 static enum GameState gamestate = INPUT;
 static enum Direction dir;
 static bool is_animating;
 static bool new_block;
 
+/* [[ FN DFN ]] */
+
+// Return tile color based on the number.
 static inline Color get_tile_color(int num) {
   switch (num) {
     case 2: return (Color){238, 228, 218, 255};
@@ -51,12 +63,13 @@ static inline Color get_tile_color(int num) {
   }
 }
 
+// Return text color based on the number.
 static inline Color get_text_color(int num) {
   return (num <= 4)? (Color){119, 110, 101, 255} : RAYWHITE;
 }
 
+// Get input and report any changes in gamestate.
 static enum GameState get_input(void) {
-
   if (IsKeyPressed(KEY_LEFT)) {
     dir = LEFT;
     return MERGE;
@@ -73,11 +86,14 @@ static enum GameState get_input(void) {
     dir = DOWN;
     return MERGE;
     
+  } else if (IsKeyPressed(KEY_SPACE)) {
+    return RESET;
   }
 
   return INPUT;
 }
 
+// Draw background empty tiles.
 static void draw_empty_tiles(void) {
   for (int i = 0; i < SIZE; i++) {
     for (int j = 0; j < SIZE; j++) {
@@ -89,24 +105,7 @@ static void draw_empty_tiles(void) {
   }
 }
 
-static void slide(struct Block *b, float target_x, float target_y, float dt) {
-  if (b->x < target_x) {
-    b->x += SLIDE_SPEED * dt;
-    if (b->x > target_x) b->x = target_x;
-  } else if (b->x > target_x) {
-    b->x -= SLIDE_SPEED * dt;
-    if (b->x < target_x) b->x = target_x;
-  }
-
-  if (b->y < target_y) {
-    b->y += SLIDE_SPEED * dt;
-    if (b->y > target_y) b->y = target_y;
-  } else if (b->y > target_y) {
-    b->y -= SLIDE_SPEED * dt;
-    if (b->y < target_y) b->y = target_y;
-  }
-}
-
+// Render number properly, centering them.
 static void rendernum(int num, float x, float y) {
   const char *num_str = TextFormat("%d", num);
 
@@ -128,6 +127,7 @@ static void rendernum(int num, float x, float y) {
   DrawTextEx(game_font, num_str, pos, font_size, 0, text_color);
 }
 
+// Animate and draw non empty tiles.
 static void draw_tiles(float dt) {
   is_animating = false;
 
@@ -171,26 +171,39 @@ static void draw_tiles(float dt) {
         DrawRectangleRounded(rect, ROUNDED_CORNERS, 20, merged_color);
       }
 
+      // slide.
       float target_x = j * BLOCK_SIZE + PADDING * (j + 1);
       float target_y = i * BLOCK_SIZE + PADDING * (i + 1);
 
-      slide(b, target_x, target_y, dt);
+      if (b->x < target_x) {
+        b->x += SLIDE_SPEED * dt;
+        if (b->x > target_x) b->x = target_x;
+      } else if (b->x > target_x) {
+        b->x -= SLIDE_SPEED * dt;
+        if (b->x < target_x) b->x = target_x;
+      }
+
+      if (b->y < target_y) {
+        b->y += SLIDE_SPEED * dt;
+        if (b->y > target_y) b->y = target_y;
+      } else if (b->y > target_y) {
+        b->y -= SLIDE_SPEED * dt;
+        if (b->y < target_y) b->y = target_y;
+      }
 
       if (b->x != target_x || b->y != target_y) {
         is_animating = true;
       }
 
       Rectangle rect = {b->x, b->y, BLOCK_SIZE, BLOCK_SIZE};
-
       DrawRectangleRounded(rect, ROUNDED_CORNERS, 20, block_color);
       rendernum(b->num, b->x, b->y);
     }
   }
-
 }
 
+// Manage gamestate (INPUT, MERGE, ANIMATION, RESET).
 static void manage_gamestate(void) {
- 
   if (gamestate == INPUT) {
     gamestate = get_input();
 
@@ -203,14 +216,16 @@ static void manage_gamestate(void) {
       gamestate = INPUT;
       if (new_block) {
         random24();
-      } else if (isover()) {
-        gamestate = OVER;
       }
     }
-  }
 
+  } else if (gamestate == RESET) {
+    reset_2048();
+    gamestate = INPUT;
+  }
 }
- 
+
+// Render the game.
 static void render(float dt) {
   BeginDrawing();
   ClearBackground(BG_COL);
@@ -219,16 +234,19 @@ static void render(float dt) {
   EndDrawing();
 }
 
+// Initialize the renderer.
 static void init_renderer(void) {
   InitWindow(W_SIZE, W_SIZE, TITLE);
-  game_font = LoadFontEx(FONT, 64, NULL, 0);
+  game_font = LoadFontEx(FONT, 128, NULL, 0);
   if (!IsFontValid(game_font)) {
     fprintf(stderr, "Error: Font \'%s\' not found / corrupted!\n", FONT);
     exit(0);
   }
+  SetTextureFilter(game_font.texture, TEXTURE_FILTER_BILINEAR);
   SetTargetFPS(FPS);
 }
 
+// Gameloop manages gamestate and renders until window is destroyed.
 static void gameloop(void) {
   while (!WindowShouldClose()) {
     float dt = GetFrameTime(); 
@@ -237,10 +255,13 @@ static void gameloop(void) {
   }
 }
 
+// End the renderer.
 static void end_renderer(void) {
+  UnloadFont(game_font);
   CloseWindow();
 }
 
+// Entry point.
 int main(void) {
   init_renderer();
   init_2048();
@@ -248,3 +269,5 @@ int main(void) {
   end_renderer();
   return 0;
 }
+
+/* [[END]] */

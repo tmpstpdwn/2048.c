@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include "2048.h"
 
 /* [[ GLOBAL VARS ]] */
@@ -19,16 +20,15 @@ static bool new_block = false;
 
 /* [[ FN DFN ]] */
 
-// Is the game over?
-bool isover(void) {
+// Reset table.
+void reset_2048(void) {
   for (int i = 0; i < SIZE; i++) {
     for (int j = 0; j < SIZE; j++) {
-      if (table[i][j].num == 0) return false;
-      if (j < SIZE - 1 && table[i][j].num == table[i][j + 1].num) return false;
-      if (i < SIZE - 1 && table[i][j].num == table[i + 1][j].num) return false;
+      memset(&table[i][j], 0, sizeof(struct Block));
     }
   }
-  return true;
+  random24();
+  random24();
 }
 
 // Set random non-zero table cell to 2 or 4.
