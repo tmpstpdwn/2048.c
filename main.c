@@ -68,31 +68,6 @@ static inline Color get_text_color(int num) {
   return (num <= 4)? (Color){119, 110, 101, 255} : RAYWHITE;
 }
 
-// Get input and report any changes in gamestate.
-static enum GameState get_input(void) {
-  if (IsKeyPressed(KEY_LEFT)) {
-    dir = LEFT;
-    return MERGE;
-    
-  } else if (IsKeyPressed(KEY_RIGHT)) {
-    dir = RIGHT;
-    return MERGE;
-    
-  } else if (IsKeyPressed(KEY_UP)) {
-    dir = UP;
-    return MERGE;
-    
-  } else if (IsKeyPressed(KEY_DOWN)) {
-    dir = DOWN;
-    return MERGE;
-    
-  } else if (IsKeyPressed(KEY_SPACE)) {
-    return RESET;
-  }
-
-  return INPUT;
-}
-
 // Draw background empty tiles.
 static void draw_empty_tiles(void) {
   for (int i = 0; i < SIZE; i++) {
@@ -105,7 +80,7 @@ static void draw_empty_tiles(void) {
   }
 }
 
-// Render number properly, centering them.
+// Render number properly, centering on block at x, y.
 static void rendernum(int num, float x, float y) {
   const char *num_str = TextFormat("%d", num);
 
@@ -134,7 +109,7 @@ static void draw_tiles(float dt) {
   for (int i = 0; i < SIZE; i++) {
     for (int j = 0; j < SIZE; j++) {
 
-      struct Block *b = getblock(i, j);
+      struct Block *b = get_block(i, j);
 
       if (!b->num) {
         continue;
@@ -144,7 +119,6 @@ static void draw_tiles(float dt) {
         b->x = j * BLOCK_SIZE + PADDING * (j + 1);
         b->y = i * BLOCK_SIZE + PADDING * (i + 1);
         b->init = true;
-        b->alpha = 0;
       }
 
       Color block_color = get_tile_color(b->num);
@@ -205,7 +179,27 @@ static void draw_tiles(float dt) {
 // Manage gamestate (INPUT, MERGE, ANIMATION, RESET).
 static void manage_gamestate(void) {
   if (gamestate == INPUT) {
-    gamestate = get_input();
+    gamestate = INPUT;
+
+    if (IsKeyPressed(KEY_LEFT)) {
+      dir = LEFT;
+      gamestate = MERGE;
+    
+    } else if (IsKeyPressed(KEY_RIGHT)) {
+      dir = RIGHT;
+      gamestate = MERGE;
+    
+    } else if (IsKeyPressed(KEY_UP)) {
+      dir = UP;
+      gamestate = MERGE;
+    
+    } else if (IsKeyPressed(KEY_DOWN)) {
+      dir = DOWN;
+      gamestate = MERGE;
+    
+    } else if (IsKeyPressed(KEY_SPACE)) {
+      gamestate = RESET;
+    }
 
   } else if (gamestate == MERGE) {
     new_block = merge(dir);
@@ -213,10 +207,10 @@ static void manage_gamestate(void) {
 
   } else if (gamestate == ANIMATION) {
     if (!is_animating) {
-      gamestate = INPUT;
       if (new_block) {
-        random24();
+        spawn_tile();
       }
+      gamestate = INPUT;
     }
 
   } else if (gamestate == RESET) {

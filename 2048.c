@@ -16,23 +16,27 @@ static struct Block *rowh[SIZE][SIZE] = {0}; // Horizontal.
 static struct Block *rowv[SIZE][SIZE] = {0}; // Vertical.
 
 // Should a new block be added?
-static bool new_block = false;
+static bool new_block;
 
 /* [[ FN DFN ]] */
 
-// Reset table.
-void reset_2048(void) {
+// Initialize random seed, row pointers and table.
+void init_2048(void) {
+  srand(time(NULL));
+
   for (int i = 0; i < SIZE; i++) {
     for (int j = 0; j < SIZE; j++) {
-      memset(&table[i][j], 0, sizeof(struct Block));
+      rowh[i][j] = &table[i][j];
+      rowv[j][i] = &table[i][j];
     }
   }
-  random24();
-  random24();
+
+  spawn_tile();
+  spawn_tile();
 }
 
 // Set random non-zero table cell to 2 or 4.
-void random24(void) {
+void spawn_tile(void) {
   int empty_cells[SIZE * SIZE][2];
   int count = 0;
 
@@ -52,21 +56,7 @@ void random24(void) {
   int x = empty_cells[rand_index][0];
   int y = empty_cells[rand_index][1];
   table[x][y].num = (rand() % 10 == 0) ? 4 : 2;
-}
-
-// Initialize random seed, row pointers.
-void init_2048(void) {
-  srand(time(NULL));
-
-  for (int i = 0; i < SIZE; i++) {
-    for (int j = 0; j < SIZE; j++) {
-      rowh[i][j] = &table[i][j];
-      rowv[j][i] = &table[i][j];
-    }
-  }
-
-  random24();
-  random24();
+  table[x][y].alpha = 0;
 }
 
 // Merge a row in the given direction (1: right, -1: left).
@@ -92,13 +82,13 @@ static void rmerge(struct Block *arr[SIZE], int dir) {
       arr[write]->num *= 2;
       arr[write]->x = arr[read]->x;
       arr[write]->y = arr[read]->y;
-      arr[write]->init = arr[read]->init;
+      arr[write]->init = true;
       
       arr[read]->init = false;
       arr[read]->num = 0;
 
-      write += step, read += step;
       new_block = true;
+      write += step, read += step;
 
     } else if (!arr[write]->num) {
       arr[write]->num = arr[read]->num;
@@ -109,8 +99,8 @@ static void rmerge(struct Block *arr[SIZE], int dir) {
       arr[read]->init = false;
       arr[read]->num = 0;
 
-      read += step;
       new_block = true;
+      read += step;
 
     } else if (!arr[write+step]->num) {
       write += step;
@@ -155,8 +145,19 @@ bool merge(enum Direction dir) {
   return new_block;
 }
 
+// Reset table.
+void reset_2048(void) {
+  for (int i = 0; i < SIZE; i++) {
+    for (int j = 0; j < SIZE; j++) {
+      memset(&table[i][j], 0, sizeof(struct Block));
+    }
+  }
+  spawn_tile();
+  spawn_tile();
+}
+
 // Return pointer to a block.
-struct Block* getblock(int row, int col) {
+struct Block* get_block(int row, int col) {
   if (row < 0 || row >= SIZE || col < 0 || col >= SIZE) return NULL;
   return &table[row][col];
 }
