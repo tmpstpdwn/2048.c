@@ -8,11 +8,10 @@ ASSETS_DIR = assets
 SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC))
 
-# Linux build settings
-LINUX_RAYLIB_DIR = vendor/raylib-linux
+# Linux build settings (use system raylib)
 CC = gcc
-CFLAGS = -I$(INC_DIR) -I$(LINUX_RAYLIB_DIR)/include
-LDFLAGS = -L$(LINUX_RAYLIB_DIR)/lib -lraylib -lm -ldl -lrt -lpthread -lX11
+CFLAGS = -I$(INC_DIR)
+LDFLAGS = -lraylib -lm -ldl -lrt -lpthread -lX11
 TARGET = 2048
 
 # Windows cross compile settings
