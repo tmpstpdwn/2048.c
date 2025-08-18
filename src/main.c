@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "2048.h"
 
-#define CELL_SIZE 100
+#define CELL_SIZE 200
 #define CELL_BLOCK_PERC 90
 #define ROUNDED_CORNERS 0.1f
 #define FPS 60
@@ -34,8 +34,12 @@ static const Color EMPTY_TILE_COL = {204, 192, 180, 255};
 static const char *TITLE = "2048";
 
 // Font.
-static const char *FONT = "font.ttf";
-static Font game_font;
+static const char *FONT = "assets/font.ttf";
+static Font font;
+
+// Icon.
+static const char *ICON = "assets/2048.png";
+static Image icon;
 
 // Game contextual variables.
 static enum GameState gamestate = INPUT;
@@ -92,14 +96,14 @@ static void rendernum(int num, float x, float y) {
   float base_font_size = BLOCK_SIZE / 2.2f;
   float font_size = base_font_size - (digits - 2) * (BLOCK_SIZE * 0.08f);
 
-  Vector2 text_size = MeasureTextEx(game_font, num_str, font_size, 0);
+  Vector2 text_size = MeasureTextEx(font, num_str, font_size, 0);
   Vector2 pos = {
       x + (BLOCK_SIZE - text_size.x) / 2.0f,
       y + (BLOCK_SIZE - text_size.y) / 2.0f
   };
 
   Color text_color = get_text_color(num);
-  DrawTextEx(game_font, num_str, pos, font_size, 0, text_color);
+  DrawTextEx(font, num_str, pos, font_size, 0, text_color);
 }
 
 // Animate and draw non empty tiles.
@@ -231,12 +235,17 @@ static void render(float dt) {
 // Initialize the renderer.
 static void init_renderer(void) {
   InitWindow(W_SIZE, W_SIZE, TITLE);
-  game_font = LoadFontEx(FONT, 128, NULL, 0);
-  if (!IsFontValid(game_font)) {
-    fprintf(stderr, "Error: Font \'%s\' not found / corrupted!\n", FONT);
-    exit(0);
+
+  icon = LoadImage(ICON);
+  font = LoadFontEx(FONT, 128, NULL, 0);
+
+  if (!IsImageValid(icon) || !IsFontValid(font)) {
+    fprintf(stderr, "Error: Window icon \'%s\' or font \'%s\' not found / corrupted!\n", ICON, FONT);
+    exit(1);
   }
-  SetTextureFilter(game_font.texture, TEXTURE_FILTER_BILINEAR);
+
+  SetWindowIcon(icon);
+  SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
   SetTargetFPS(FPS);
 }
 
@@ -251,7 +260,8 @@ static void gameloop(void) {
 
 // End the renderer.
 static void end_renderer(void) {
-  UnloadFont(game_font);
+  UnloadFont(font);
+  UnloadImage(icon);
   CloseWindow();
 }
 

@@ -2,9 +2,7 @@
 
 A minimal, 2048 game written in C using [Raylib](https://www.raylib.com/).
 
-## Build and run
-
-- Raylib should be installed.
+## Build from source and run
 
 ```
 git clone https://github.com/tmpstpdwn/2048.c
