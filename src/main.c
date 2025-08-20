@@ -5,11 +5,12 @@
 #include <stdlib.h>
 #include "2048.h"
 
-#define CELL_SIZE 200
-#define CELL_BLOCK_PERC 90
-#define ROUNDED_CORNERS 0.1f
 #define FPS 60
-#define FADE_SPEED 2.0f
+#define SCREEN_WINDOW_PERC 0.4f
+#define CELL_BLOCK_PERC 0.9f
+#define ROUNDED_CORNERS 0.1f
+#define SLIDE_SPEED_FACTOR 3.5f
+#define FADE_SPEED_FACTOR 0.004f
 
 enum GameState {
   INPUT,
@@ -21,10 +22,11 @@ enum GameState {
 /* [[ GLOBAL VARS ]] */
 
 // UI stuff.
-static const int W_SIZE = SIZE * CELL_SIZE; 
-static const float BLOCK_SIZE = (CELL_BLOCK_PERC * CELL_SIZE) / 100;
-static const float PADDING = ((CELL_SIZE - BLOCK_SIZE) * SIZE) / (SIZE + 1);
-static const float SLIDE_SPEED = W_SIZE * 4;
+static int W_SIZE; 
+static float BLOCK_SIZE;
+static float PADDING;
+static float SLIDE_SPEED;
+static float FADE_SPEED;
 
 // Repeatedly used colors for BG and empty tiles.
 static const Color BG_COL = {187, 173, 160, 255};
@@ -75,12 +77,14 @@ static inline Color get_text_color(int num) {
 // Draw background empty tiles.
 static void draw_empty_tiles(void) {
   for (int i = 0; i < SIZE; i++) {
+
     for (int j = 0; j < SIZE; j++) {
       float x = j * BLOCK_SIZE + PADDING * (j + 1);
       float y = i * BLOCK_SIZE + PADDING * (i + 1);
       Rectangle rect = {x, y, BLOCK_SIZE, BLOCK_SIZE};
       DrawRectangleRounded(rect, ROUNDED_CORNERS, 12, EMPTY_TILE_COL);
     }
+
   }
 }
 
@@ -234,13 +238,32 @@ static void render(float dt) {
 
 // Initialize the renderer.
 static void init_renderer(void) {
-  InitWindow(W_SIZE, W_SIZE, TITLE);
+  InitWindow(0, 0, TITLE);
+
+  int monitor = GetCurrentMonitor();
+  int screen_width = GetMonitorWidth(monitor);
+  int screen_height = GetMonitorHeight(monitor);
+
+  int min_dim = (screen_width < screen_height) ? screen_width : screen_height;
+  W_SIZE = (int)(min_dim * SCREEN_WINDOW_PERC);
+
+  int x = (screen_width - W_SIZE)/2;
+  int y = (screen_height - W_SIZE)/2;
+
+  SetWindowSize(W_SIZE, W_SIZE);
+  SetWindowPosition(x, y);
+
+  float CELL_SIZE = (float)W_SIZE / SIZE;
+  BLOCK_SIZE = CELL_BLOCK_PERC * CELL_SIZE;
+  PADDING = ((CELL_SIZE - BLOCK_SIZE) * SIZE) / (SIZE + 1);
+  SLIDE_SPEED = W_SIZE * SLIDE_SPEED_FACTOR;
+  FADE_SPEED = W_SIZE * FADE_SPEED_FACTOR;
 
   icon = LoadImage(ICON);
   font = LoadFontEx(FONT, 128, NULL, 0);
 
   if (!IsImageValid(icon) || !IsFontValid(font)) {
-    fprintf(stderr, "Error: Window icon \'%s\' or font \'%s\' not found / corrupted!\n", ICON, FONT);
+    fprintf(stderr, "Error: Window icon '%s' or font '%s' not found / corrupted!\n", ICON, FONT);
     exit(1);
   }
 
