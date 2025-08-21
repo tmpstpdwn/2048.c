@@ -2,22 +2,24 @@
 
 A minimal, 2048 game written in C using [Raylib](https://www.raylib.com/).
 
-## Build from source and run
+## Run
 
-- Raylib should be installed.
+- ### Build from source (Linux)
 
-```
-git clone https://github.com/tmpstpdwn/2048.c
-cd 2048.c
-make
-./2048
-```
+  - Raylib should be installed.
 
-## Releases
 
-Windows release includes raylib.dll therefor it shall work fine.
-for the linux release to work raylib should be installed.
+  ```
+  git clone https://github.com/tmpstpdwn/2048.c
+  cd 2048.c
+  make
+  ./2048
+  ```
 
+
+- ### Releases (Windows)
+
+  [Download from release](https://github.com/tmpstpdwn/2048.c/releases)
 
 ## Controls
 
@@ -29,7 +31,6 @@ for the linux release to work raylib should be installed.
 
 
 If the board is full and no merges are possible, **restart** by pressing space.
-
 
 ## License
 
