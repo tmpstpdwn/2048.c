@@ -214,8 +214,10 @@ static void manage_gamestate(void) {
     gamestate = SLIDE;
 
   } else if (gamestate == SLIDE) {
-    if (!is_sliding && new_block) {
-      spawn_tile();
+    if (!is_sliding) {
+      if (new_block) {
+        spawn_tile();
+      }
       gamestate = INPUT;
     }
 
