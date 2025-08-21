@@ -18,7 +18,7 @@ TARGET = 2048
 WIN_CC = x86_64-w64-mingw32-gcc
 WIN_RAYLIB_DIR = vendor/raylib-crosswin
 WIN_CFLAGS = -I$(INC_DIR) -I$(WIN_RAYLIB_DIR)/include
-WIN_LDFLAGS = -L$(WIN_RAYLIB_DIR)/lib -lraylib -lopengl32 -lgdi32 -lwinmm
+WIN_LDFLAGS = -L$(WIN_RAYLIB_DIR)/lib -lraylib -lopengl32 -lgdi32 -lwinmm -mwindows
 WIN_TARGET = 2048.exe
 
 .PHONY: all clean crosswin
