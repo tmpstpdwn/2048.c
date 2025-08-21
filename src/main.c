@@ -15,7 +15,7 @@
 enum GameState {
   INPUT,
   MERGE,
-  ANIMATION,
+  SLIDE,
   RESET,
 };
 
@@ -46,7 +46,7 @@ static Image icon;
 // Game contextual variables.
 static enum GameState gamestate = INPUT;
 static enum Direction dir;
-static bool is_animating;
+static bool is_sliding;
 static bool new_block;
 
 /* [[ FN DFN ]] */
@@ -112,7 +112,7 @@ static void rendernum(int num, float x, float y) {
 
 // Animate and draw non empty tiles.
 static void draw_tiles(float dt) {
-  is_animating = false;
+  is_sliding = false;
 
   for (int i = 0; i < SIZE; i++) {
     for (int j = 0; j < SIZE; j++) {
@@ -174,7 +174,7 @@ static void draw_tiles(float dt) {
       }
 
       if (b->x != target_x || b->y != target_y) {
-        is_animating = true;
+        is_sliding = true;
       }
 
       Rectangle rect = {b->x, b->y, BLOCK_SIZE, BLOCK_SIZE};
@@ -184,7 +184,7 @@ static void draw_tiles(float dt) {
   }
 }
 
-// Manage gamestate (INPUT, MERGE, ANIMATION, RESET).
+// Manage gamestate (INPUT, MERGE, SLIDE, RESET).
 static void manage_gamestate(void) {
   if (gamestate == INPUT) {
     gamestate = INPUT;
@@ -211,13 +211,11 @@ static void manage_gamestate(void) {
 
   } else if (gamestate == MERGE) {
     new_block = merge(dir);
-    gamestate = ANIMATION;
+    gamestate = SLIDE;
 
-  } else if (gamestate == ANIMATION) {
-    if (!is_animating) {
-      if (new_block) {
-        spawn_tile();
-      }
+  } else if (gamestate == SLIDE) {
+    if (!is_sliding && new_block) {
+      spawn_tile();
       gamestate = INPUT;
     }
 
