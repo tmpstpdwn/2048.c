@@ -4,10 +4,7 @@ A minimal, 2048 game written in C using [Raylib](https://www.raylib.com/).
 
 ## Run
 
-- ### Build from source (Linux)
-
-  - Raylib should be installed.
-
+- ### Linux
 
   ```
   git clone https://github.com/tmpstpdwn/2048.c
@@ -16,8 +13,9 @@ A minimal, 2048 game written in C using [Raylib](https://www.raylib.com/).
   ./2048
   ```
 
+  Raylib should be installed.
 
-- ### Releases (Windows)
+- ### Windows
 
   [Download from release](https://github.com/tmpstpdwn/2048.c/releases)
 
