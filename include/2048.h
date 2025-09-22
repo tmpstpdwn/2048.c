@@ -26,7 +26,7 @@ enum Direction {
 
 void init_2048(void); // Initializes the game board.
 void spawn_tile(void); // Spawns 2 or 4 randomly on the board.
-bool merge(enum Direction dir); // Merges vertically (left, right, up, down).
+bool merge(enum Direction dir); // Merges (left, right, up, down), returns whether a new block should be added.
 void reset_2048(void); // Reset the game board.
 struct Block* get_block(int row, int col); // Return pointer to a block.
 

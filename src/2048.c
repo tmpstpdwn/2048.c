@@ -31,12 +31,12 @@ void init_2048(void) {
     }
   }
 
-  spawn_tile();
-  spawn_tile();
+  spawn_block();
+  spawn_block();
 }
 
 // Set random non-zero table cell to 2 or 4.
-void spawn_tile(void) {
+void spawn_block(void) {
   int empty_cells[SIZE * SIZE][2];
   int count = 0;
 
@@ -152,8 +152,8 @@ void reset_2048(void) {
       memset(&table[i][j], 0, sizeof(struct Block));
     }
   }
-  spawn_tile();
-  spawn_tile();
+  spawn_block();
+  spawn_block();
 }
 
 // Return pointer to a block.

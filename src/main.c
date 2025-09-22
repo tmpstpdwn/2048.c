@@ -25,6 +25,8 @@ enum GameState {
 static int W_SIZE; 
 static float BLOCK_SIZE;
 static float PADDING;
+
+// Animation properties.
 static float SLIDE_SPEED;
 static float FADE_SPEED;
 
