@@ -30,9 +30,9 @@ static float PADDING;
 static float SLIDE_SPEED;
 static float FADE_SPEED;
 
-// Repeatedly used colors for BG and empty tiles.
+// Repeatedly used colors for BG and empty blocks.
 static const Color BG_COL = {187, 173, 160, 255};
-static const Color EMPTY_TILE_COL = {204, 192, 180, 255};
+static const Color EMPTY_BLOCK_COL = {204, 192, 180, 255};
 
 // Title.
 static const char *TITLE = "2048";
@@ -53,8 +53,8 @@ static bool new_block;
 
 /* [[ FN DFN ]] */
 
-// Return tile color based on the number.
-static inline Color get_tile_color(int num) {
+// Return block color based on the number.
+static inline Color get_block_color(int num) {
   switch (num) {
     case 2: return (Color){238, 228, 218, 255};
     case 4: return (Color){237, 224, 200, 255};
@@ -76,15 +76,15 @@ static inline Color get_text_color(int num) {
   return (num <= 4)? (Color){119, 110, 101, 255} : RAYWHITE;
 }
 
-// Draw background empty tiles.
-static void draw_empty_tiles(void) {
+// Draw background empty block.
+static void draw_empty_blocks(void) {
   for (int i = 0; i < SIZE; i++) {
 
     for (int j = 0; j < SIZE; j++) {
       float x = j * BLOCK_SIZE + PADDING * (j + 1);
       float y = i * BLOCK_SIZE + PADDING * (i + 1);
       Rectangle rect = {x, y, BLOCK_SIZE, BLOCK_SIZE};
-      DrawRectangleRounded(rect, ROUNDED_CORNERS, 12, EMPTY_TILE_COL);
+      DrawRectangleRounded(rect, ROUNDED_CORNERS, 12, EMPTY_BLOCK_COL);
     }
 
   }
@@ -112,8 +112,8 @@ static void rendernum(int num, float x, float y) {
   DrawTextEx(font, num_str, pos, font_size, 0, text_color);
 }
 
-// Animate and draw non empty tiles.
-static void draw_tiles(float dt) {
+// Animate and draw non empty blocks.
+static void draw_blocks(float dt) {
   is_sliding = false;
 
   for (int i = 0; i < SIZE; i++) {
@@ -131,7 +131,7 @@ static void draw_tiles(float dt) {
         b->init = true;
       }
 
-      Color block_color = get_tile_color(b->num);
+      Color block_color = get_block_color(b->num);
 
       // Fade in.
       if (b->alpha != 1) {
@@ -149,7 +149,7 @@ static void draw_tiles(float dt) {
           b->merged = false;
           b->merged_alpha = 0;
         }
-        Color merged_color = get_tile_color(b->merged_num);
+        Color merged_color = get_block_color(b->merged_num);
         merged_color.a *= b->merged_alpha;
         Rectangle rect = {b->merged_x, b->merged_y, BLOCK_SIZE, BLOCK_SIZE};
         DrawRectangleRounded(rect, ROUNDED_CORNERS, 20, merged_color);
@@ -218,7 +218,7 @@ static void manage_gamestate(void) {
   } else if (gamestate == SLIDE) {
     if (!is_sliding) {
       if (new_block) {
-        spawn_tile();
+        spawn_block();
       }
       gamestate = INPUT;
     }
@@ -233,8 +233,8 @@ static void manage_gamestate(void) {
 static void render(float dt) {
   BeginDrawing();
   ClearBackground(BG_COL);
-  draw_empty_tiles();
-  draw_tiles(dt);
+  draw_empty_blocks();
+  draw_blocks(dt);
   EndDrawing();
 }
 
